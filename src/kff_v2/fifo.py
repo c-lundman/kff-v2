@@ -44,6 +44,7 @@ def add_fifo_wait_columns(
     wait_col: str = "Väntetid",
     outflow_eps: float = 1e-9,
     match_tol: float = 1e-6,
+    use_episode_boundaries: bool = False,
 ) -> pd.DataFrame:
     """Add FIFO wait-time columns to a corrected minute-flow DataFrame.
 
@@ -58,33 +59,25 @@ def add_fifo_wait_columns(
     out = df.copy().reset_index(drop=True)
     out[wait_col] = np.nan
 
-    has_episode = episode_col in out.columns
-    has_in_episode = in_episode_col in out.columns
+    if use_episode_boundaries:
+        has_episode = episode_col in out.columns
+        has_in_episode = in_episode_col in out.columns
 
-    if has_episode and has_in_episode:
-        mask = out[in_episode_col].fillna(False).astype(bool)
-        episode_ids = [x for x in out.loc[mask, episode_col].dropna().unique()]
-        if not episode_ids:
-            # No active episodes flagged: compute on full window.
-            w = _fifo_wait_single_segment(
-                out[in_col].astype(float).to_numpy(),
-                out[out_col].astype(float).to_numpy(),
-                outflow_eps=outflow_eps,
-                match_tol=match_tol,
-            )
-            out[wait_col] = w
-            return out
-        for eid in episode_ids:
-            seg_mask = mask & (out[episode_col] == eid)
-            seg = out.loc[seg_mask]
-            w = _fifo_wait_single_segment(
-                seg[in_col].astype(float).to_numpy(),
-                seg[out_col].astype(float).to_numpy(),
-                outflow_eps=outflow_eps,
-                match_tol=match_tol,
-            )
-            out.loc[seg_mask, wait_col] = w
-        return out
+        if has_episode and has_in_episode:
+            mask = out[in_episode_col].fillna(False).astype(bool)
+            episode_ids = [x for x in out.loc[mask, episode_col].dropna().unique()]
+            if episode_ids:
+                for eid in episode_ids:
+                    seg_mask = mask & (out[episode_col] == eid)
+                    seg = out.loc[seg_mask]
+                    w = _fifo_wait_single_segment(
+                        seg[in_col].astype(float).to_numpy(),
+                        seg[out_col].astype(float).to_numpy(),
+                        outflow_eps=outflow_eps,
+                        match_tol=match_tol,
+                    )
+                    out.loc[seg_mask, wait_col] = w
+                return out
 
     w = _fifo_wait_single_segment(
         out[in_col].astype(float).to_numpy(),
