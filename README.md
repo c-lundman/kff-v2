@@ -170,8 +170,28 @@ Primary API for timestamp inputs:
 - default output index: `Tid`
 - default output columns:
 - `Pax i kö`,
-- `Pax in i kö`,
 - `Pax ur kö`.
+- `Pax in i kö`,
+- `Väntetid`.
+
+`Väntetid` semantics:
+
+- minute-based FIFO waiting time for pax just exiting during that minute,
+- computed after queue correction,
+- `NaN` for minutes where corrected outflow is zero.
+
+Example:
+
+```python
+import pandas as pd
+from kff_v2 import estimate_queue_from_timestamps
+
+in_df = pd.DataFrame({"timestamp": ["2026-01-20T06:00:05Z", "2026-01-20T06:00:31Z"]})
+out_df = pd.DataFrame({"timestamp": ["2026-01-20T06:01:10Z"]})
+
+queue_df = estimate_queue_from_timestamps(in_df, out_df)
+print(queue_df.head())
+```
 
 ## Phased Roadmap
 
@@ -201,3 +221,14 @@ Primary API for timestamp inputs:
 Current local smoke command (no external installs required):
 
 - `.venv/bin/python -m unittest discover -s tests -v`
+
+## CI
+
+GitHub Actions workflow:
+
+- `.github/workflows/ci.yml`
+
+Runs on push and pull request to `main`:
+
+- `ruff check .`
+- `pytest -q`
