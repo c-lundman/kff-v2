@@ -17,6 +17,12 @@ class ReconcileConfig:
     q0: float = 0.0
     w_in: float = 1.0
     w_out: float = 4.0
+    adaptive_inflow_prior: bool = False
+    activity_source: str = "max_io"
+    activity_window: int = 7
+    activity_eps: float = 0.5
+    inflow_weight_min_scale: float = 0.25
+    inflow_weight_max_scale: float = 4.0
     smooth_in: float = 0.0
     smooth_out: float = 0.0
     nonnegative_flows: bool = True
@@ -24,6 +30,44 @@ class ReconcileConfig:
     eps_abs: float = 1e-5
     eps_rel: float = 1e-5
     max_iter: int = 50_000
+
+
+def _compute_inflow_weight_vector(
+    in_measured: np.ndarray,
+    out_measured: np.ndarray,
+    cfg: ReconcileConfig,
+) -> np.ndarray:
+    """Compute time-varying inflow correction weights for prior shaping."""
+    if not cfg.adaptive_inflow_prior:
+        return np.full_like(in_measured, float(cfg.w_in), dtype=float)
+
+    if cfg.activity_source == "in":
+        proxy = in_measured.copy()
+    elif cfg.activity_source == "out":
+        proxy = out_measured.copy()
+    elif cfg.activity_source == "sum_io":
+        proxy = in_measured + out_measured
+    else:
+        proxy = np.maximum(in_measured, out_measured)
+
+    win = max(1, int(cfg.activity_window))
+    proxy_s = (
+        pd.Series(proxy, dtype=float)
+        .rolling(window=win, center=True, min_periods=1)
+        .mean()
+        .to_numpy()
+    )
+    raw_scale = 1.0 / (proxy_s + float(cfg.activity_eps))
+    mean_scale = float(raw_scale.mean()) if len(raw_scale) else 1.0
+    if mean_scale <= 0:
+        mean_scale = 1.0
+    scale = raw_scale / mean_scale
+    scale = np.clip(
+        scale,
+        float(cfg.inflow_weight_min_scale),
+        float(cfg.inflow_weight_max_scale),
+    )
+    return float(cfg.w_in) * scale
 
 
 def reconcile_minute_flows(
@@ -74,10 +118,12 @@ def reconcile_minute_flows(
     i = cp.Variable(n)
     o = cp.Variable(n)
     q = cp.Variable(n)
+    w_in_vec = _compute_inflow_weight_vector(in_measured, out_measured, cfg)
+    w_out_vec = np.full(n, float(cfg.w_out), dtype=float)
 
     objective_terms = [
-        cfg.w_in * cp.sum_squares(i - in_measured),
-        cfg.w_out * cp.sum_squares(o - out_measured),
+        cp.sum(cp.multiply(w_in_vec, cp.square(i - in_measured))),
+        cp.sum(cp.multiply(w_out_vec, cp.square(o - out_measured))),
     ]
     if cfg.smooth_in > 0 and n > 1:
         objective_terms.append(cfg.smooth_in * cp.sum_squares(i[1:] - i[:-1]))
