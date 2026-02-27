@@ -79,3 +79,6 @@ def test_estimate_queue_small_case_has_consistent_occupancy() -> None:
     assert queue["Pax in i kö"].tolist() == [3.0, 0.0, 0.0, 0.0]
     assert queue["Pax ur kö"].tolist() == [0.0, 0.0, 0.0, 3.0]
     assert queue["Pax i kö"].tolist() == [3.0, 3.0, 3.0, 0.0]
+    waits = queue["Väntetid"].tolist()
+    assert pd.isna(waits[0]) and pd.isna(waits[1]) and pd.isna(waits[2])
+    assert waits[3] == 3.0

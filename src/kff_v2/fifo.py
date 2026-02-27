@@ -64,6 +64,16 @@ def add_fifo_wait_columns(
     if has_episode and has_in_episode:
         mask = out[in_episode_col].fillna(False).astype(bool)
         episode_ids = [x for x in out.loc[mask, episode_col].dropna().unique()]
+        if not episode_ids:
+            # No active episodes flagged: compute on full window.
+            w = _fifo_wait_single_segment(
+                out[in_col].astype(float).to_numpy(),
+                out[out_col].astype(float).to_numpy(),
+                outflow_eps=outflow_eps,
+                match_tol=match_tol,
+            )
+            out[wait_col] = w
+            return out
         for eid in episode_ids:
             seg_mask = mask & (out[episode_col] == eid)
             seg = out.loc[seg_mask]
