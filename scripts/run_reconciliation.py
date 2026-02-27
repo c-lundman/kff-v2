@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from kff_v2 import ReconcileConfig, reconcile_minute_flows
+from kff_v2 import ReconcileConfig, add_fifo_wait_columns, reconcile_minute_flows
 
 
 def main() -> None:
@@ -39,6 +39,7 @@ def main() -> None:
         merged["occupancy_abs_err"] = (
             merged["occupancy_corrected_end"] - merged["occupancy_truth_end"]
         ).abs()
+        merged = add_fifo_wait_columns(merged, episode_col="episode_id", in_episode_col="in_episode")
 
         out_dir = out_root / variant_dir.name
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -63,6 +64,11 @@ def main() -> None:
                 "mae_vs_truth": float(merged["occupancy_abs_err"].mean()),
                 "p95_abs_err_vs_truth": float(merged["occupancy_abs_err"].quantile(0.95)),
             },
+            "fifo_wait_minutes": {
+                "p50": float(merged["Väntetid"].dropna().quantile(0.50)),
+                "p90": float(merged["Väntetid"].dropna().quantile(0.90)),
+                "p95": float(merged["Väntetid"].dropna().quantile(0.95)),
+            },
         }
         with (out_dir / "summary.json").open("w", encoding="utf-8") as f:
             json.dump(summary, f, indent=2)
@@ -73,4 +79,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

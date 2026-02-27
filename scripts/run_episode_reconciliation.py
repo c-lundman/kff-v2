@@ -12,6 +12,7 @@ import pandas as pd
 from kff_v2 import (
     EpisodeDetectConfig,
     ReconcileConfig,
+    add_fifo_wait_columns,
     detect_queue_episodes,
     reconcile_by_episodes,
 )
@@ -52,6 +53,7 @@ def run_one(day_key: str, variant: str) -> None:
         merged["occupancy_corrected_end"] - merged["occupancy_truth_end"]
     ).abs()
     merged["naive_occupancy_end"] = (merged["in_count_measured"] - merged["out_count_measured"]).cumsum()
+    merged = add_fifo_wait_columns(merged)
 
     merged.to_csv(out_dir / "reconciled_minute_flows.csv", index=False)
     episodes.to_csv(out_dir / "episodes.csv", index=False)
@@ -63,6 +65,11 @@ def run_one(day_key: str, variant: str) -> None:
         "naive_negative_minutes": int((merged["naive_occupancy_end"] < 0).sum()),
         "reconciled_negative_minutes": int((merged["occupancy_corrected_end"] < -1e-6).sum()),
         "mae_vs_truth": float(merged["occupancy_abs_err"].mean()),
+        "fifo_wait_minutes": {
+            "p50": float(merged["Väntetid"].dropna().quantile(0.50)),
+            "p90": float(merged["Väntetid"].dropna().quantile(0.90)),
+            "p95": float(merged["Väntetid"].dropna().quantile(0.95)),
+        },
     }
     with (out_dir / "summary.json").open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)

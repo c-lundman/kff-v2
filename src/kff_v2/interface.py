@@ -8,6 +8,7 @@ from typing import Optional
 import pandas as pd
 
 from kff_v2.episodes import EpisodeDetectConfig, reconcile_by_episodes
+from kff_v2.fifo import add_fifo_wait_columns
 from kff_v2.reconcile import ReconcileConfig, reconcile_minute_flows
 
 
@@ -27,6 +28,7 @@ class EstimateQueueOptions:
         smooth_out=0.05,
     )
     episodes: EpisodeDetectConfig = EpisodeDetectConfig()
+    include_fifo_wait: bool = True
 
 
 def _build_minute_flows(
@@ -65,14 +67,12 @@ def _build_minute_flows(
 
 
 def _format_queue_output(reconciled: pd.DataFrame) -> pd.DataFrame:
-    queue = pd.DataFrame(
-        {
-            "Tid": pd.to_datetime(reconciled["minute_start_utc"], utc=True),
-            "Pax i kö": reconciled["occupancy_corrected_end"].astype(float).to_numpy(),
-            "Pax in i kö": reconciled["in_count_corrected"].astype(float).to_numpy(),
-            "Pax ur kö": reconciled["out_count_corrected"].astype(float).to_numpy(),
-        }
-    )
+    queue = pd.DataFrame({"Tid": pd.to_datetime(reconciled["minute_start_utc"], utc=True)})
+    queue["Pax i kö"] = reconciled["occupancy_corrected_end"].astype(float).to_numpy()
+    queue["Pax ur kö"] = reconciled["out_count_corrected"].astype(float).to_numpy()
+    queue["Pax in i kö"] = reconciled["in_count_corrected"].astype(float).to_numpy()
+    if "Väntetid" in reconciled.columns:
+        queue["Väntetid"] = reconciled["Väntetid"].astype(float).to_numpy()
     queue = queue.set_index("Tid")
     queue.index.name = "Tid"
     return queue
@@ -91,7 +91,7 @@ def estimate_queue_from_timestamps(
     -------
     pandas.DataFrame
         Index `Tid`, columns:
-        `Pax i kö`, `Pax in i kö`, `Pax ur kö`.
+        `Pax i kö`, `Pax ur kö`, `Pax in i kö`, `Väntetid`.
 
     If return_debug=True:
         Returns `(queue_df, debug_df)`, where `debug_df` contains measured and
@@ -101,7 +101,7 @@ def estimate_queue_from_timestamps(
     measured = _build_minute_flows(in_df, out_df, opts)
 
     if measured.empty:
-        queue = pd.DataFrame(columns=["Pax i kö", "Pax in i kö", "Pax ur kö"])
+        queue = pd.DataFrame(columns=["Pax i kö", "Pax ur kö", "Pax in i kö", "Väntetid"])
         queue.index = pd.DatetimeIndex([], tz="UTC", name="Tid")
         if return_debug:
             return queue, measured
@@ -118,11 +118,13 @@ def estimate_queue_from_timestamps(
         reconciled["episode_id"] = pd.NA
         reconciled["in_episode"] = False
 
-    queue = _format_queue_output(reconciled)
+    reconciled = add_fifo_wait_columns(reconciled)
+    queue = _format_queue_output(
+        reconciled if opts.include_fifo_wait else reconciled.drop(columns=["Väntetid"], errors="ignore")
+    )
     if return_debug:
         debug = reconciled.copy()
         debug["Tid"] = pd.to_datetime(debug["minute_start_utc"], utc=True)
         debug = debug.set_index("Tid")
         return queue, debug
     return queue
-

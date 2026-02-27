@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from kff_v2 import add_fifo_wait_columns
+
 try:
     import matplotlib.pyplot as plt
 except ModuleNotFoundError as exc:
@@ -108,6 +110,12 @@ def _plot_one(repo_root: Path, family: str, key: str, variant: str, out: Path, s
     for df in (perfect, lossy, reconciled):
         df["minute_start_utc"] = pd.to_datetime(df["minute_start_utc"], utc=True)
 
+    # Build "true" minute FIFO wait from perfect corrected-equivalent flows.
+    perfect_for_wait = perfect[["minute_start_utc", "in_count", "out_count"]].rename(
+        columns={"in_count": "in_count_corrected", "out_count": "out_count_corrected"}
+    )
+    perfect_for_wait = add_fifo_wait_columns(perfect_for_wait)
+
     merged = perfect[["minute_start_utc", "in_count", "out_count", "occupancy_end"]].rename(
         columns={
             "in_count": "in_perfect",
@@ -133,19 +141,26 @@ def _plot_one(repo_root: Path, family: str, key: str, variant: str, out: Path, s
                 "in_count_corrected",
                 "out_count_corrected",
                 "occupancy_corrected_end",
+                "Väntetid",
             ]
         ].rename(
             columns={
                 "in_count_corrected": "in_qp",
                 "out_count_corrected": "out_qp",
                 "occupancy_corrected_end": "occ_qp",
+                "Väntetid": "wait_qp",
             }
         ),
         on="minute_start_utc",
         how="inner",
     )
+    merged = merged.merge(
+        perfect_for_wait[["minute_start_utc", "Väntetid"]].rename(columns={"Väntetid": "wait_true"}),
+        on="minute_start_utc",
+        how="inner",
+    )
 
-    fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
+    fig, axes = plt.subplots(4, 1, figsize=(14, 12), sharex=True)
     x = merged["minute_start_utc"]
 
     axes[0].plot(x, merged["in_perfect"], label="Perfect inflow", linewidth=1.2)
@@ -172,7 +187,13 @@ def _plot_one(repo_root: Path, family: str, key: str, variant: str, out: Path, s
     axes[2].set_title("Occupancy comparison")
     axes[2].legend(loc="upper right")
     axes[2].grid(True, alpha=0.25)
-    axes[2].set_xlabel("Time (UTC)")
+    axes[3].plot(x, merged["wait_true"], label="True FIFO wait (perfect)", linewidth=1.2)
+    axes[3].plot(x, merged["wait_qp"], label="Reconstructed FIFO wait (QP)", linewidth=1.0)
+    axes[3].set_ylabel("Väntetid (min)")
+    axes[3].set_title("FIFO wait-time comparison")
+    axes[3].legend(loc="upper right")
+    axes[3].grid(True, alpha=0.25)
+    axes[3].set_xlabel("Time (UTC)")
 
     fig.tight_layout()
 

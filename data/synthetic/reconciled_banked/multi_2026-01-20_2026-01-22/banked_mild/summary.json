@@ -4,5 +4,10 @@
   "minutes_in_episodes": 1770,
   "naive_negative_minutes": 3327,
   "reconciled_negative_minutes": 0,
-  "mae_vs_truth": 2.974891716259702
+  "mae_vs_truth": 2.974891716259702,
+  "fifo_wait_minutes": {
+    "p50": 13.0,
+    "p90": 83.5,
+    "p95": 122.0
+  }
 }
