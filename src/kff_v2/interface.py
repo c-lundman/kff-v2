@@ -24,6 +24,12 @@ class EstimateQueueOptions:
         q0=0.0,
         w_in=1.0,
         w_out=1.0,
+        adaptive_inflow_prior=True,
+        activity_source="max_io",
+        activity_window=7,
+        activity_eps=0.5,
+        inflow_weight_min_scale=0.25,
+        inflow_weight_max_scale=4.0,
         smooth_in=0.0,
         smooth_out=0.0,
     )
