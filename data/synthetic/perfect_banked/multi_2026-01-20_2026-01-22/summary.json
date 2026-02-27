@@ -1,0 +1,322 @@
+{
+  "scenario": "banked_multiday_v1",
+  "seed": 2026,
+  "start_ts_utc": "2026-01-20 00:00:00+00:00",
+  "end_ts_utc": "2026-01-22 23:59:00+00:00",
+  "num_minutes": 4320,
+  "num_flights": 52,
+  "flights": [
+    {
+      "day": "2026-01-20",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-20 07:46:00+00:00",
+      "pax": 227
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-20 07:05:00+00:00",
+      "pax": 245
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-20 06:52:00+00:00",
+      "pax": 120
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-20 06:09:00+00:00",
+      "pax": 193
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-20 06:53:00+00:00",
+      "pax": 245
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-20 15:25:00+00:00",
+      "pax": 184
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-20 16:57:00+00:00",
+      "pax": 211
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-20 16:59:00+00:00",
+      "pax": 251
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-20 15:09:00+00:00",
+      "pax": 207
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-20 16:06:00+00:00",
+      "pax": 194
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-20 15:54:00+00:00",
+      "pax": 199
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-20 16:41:00+00:00",
+      "pax": 214
+    },
+    {
+      "day": "2026-01-20",
+      "bank": "sparse",
+      "scheduled_minute_utc": "2026-01-20 15:04:00+00:00",
+      "pax": 91
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-21 07:44:00+00:00",
+      "pax": 228
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-21 07:36:00+00:00",
+      "pax": 245
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-21 07:50:00+00:00",
+      "pax": 186
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-21 07:07:00+00:00",
+      "pax": 242
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-21 07:02:00+00:00",
+      "pax": 126
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-21 06:26:00+00:00",
+      "pax": 153
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-21 07:55:00+00:00",
+      "pax": 253
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-21 07:26:00+00:00",
+      "pax": 229
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-21 06:17:00+00:00",
+      "pax": 178
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-21 16:15:00+00:00",
+      "pax": 236
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-21 16:25:00+00:00",
+      "pax": 259
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-21 16:07:00+00:00",
+      "pax": 198
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-21 16:35:00+00:00",
+      "pax": 248
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-21 16:36:00+00:00",
+      "pax": 222
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-21 15:24:00+00:00",
+      "pax": 188
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-21 15:03:00+00:00",
+      "pax": 237
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-21 16:51:00+00:00",
+      "pax": 212
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-21 15:31:00+00:00",
+      "pax": 244
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "sparse",
+      "scheduled_minute_utc": "2026-01-21 15:37:00+00:00",
+      "pax": 143
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "sparse",
+      "scheduled_minute_utc": "2026-01-21 16:08:00+00:00",
+      "pax": 84
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "sparse",
+      "scheduled_minute_utc": "2026-01-21 13:28:00+00:00",
+      "pax": 92
+    },
+    {
+      "day": "2026-01-21",
+      "bank": "sparse",
+      "scheduled_minute_utc": "2026-01-21 17:34:00+00:00",
+      "pax": 180
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-22 07:56:00+00:00",
+      "pax": 242
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-22 07:17:00+00:00",
+      "pax": 247
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-22 06:11:00+00:00",
+      "pax": 225
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-22 06:53:00+00:00",
+      "pax": 123
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-22 06:00:00+00:00",
+      "pax": 259
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-22 07:13:00+00:00",
+      "pax": 170
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "morning",
+      "scheduled_minute_utc": "2026-01-22 06:14:00+00:00",
+      "pax": 131
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-22 16:54:00+00:00",
+      "pax": 211
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-22 15:00:00+00:00",
+      "pax": 245
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-22 16:05:00+00:00",
+      "pax": 241
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-22 15:15:00+00:00",
+      "pax": 249
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-22 15:10:00+00:00",
+      "pax": 160
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-22 16:34:00+00:00",
+      "pax": 198
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-22 15:49:00+00:00",
+      "pax": 158
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "afternoon",
+      "scheduled_minute_utc": "2026-01-22 16:36:00+00:00",
+      "pax": 216
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "sparse",
+      "scheduled_minute_utc": "2026-01-22 20:32:00+00:00",
+      "pax": 129
+    },
+    {
+      "day": "2026-01-22",
+      "bank": "sparse",
+      "scheduled_minute_utc": "2026-01-22 10:33:00+00:00",
+      "pax": 124
+    }
+  ]
+}

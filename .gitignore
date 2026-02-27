@@ -205,3 +205,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Local ad-hoc outputs (plots, notebooks, scratch files)
+local/

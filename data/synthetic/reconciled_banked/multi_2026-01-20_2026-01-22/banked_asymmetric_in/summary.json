@@ -1,0 +1,8 @@
+{
+  "variant": "banked_asymmetric_in",
+  "num_episodes": 12,
+  "minutes_in_episodes": 1626,
+  "naive_negative_minutes": 4235,
+  "reconciled_negative_minutes": 0,
+  "mae_vs_truth": 12.985213192182744
+}

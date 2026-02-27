@@ -1,0 +1,24 @@
+{
+  "variant": "mixed_heavy_noise",
+  "config": {
+    "seed": 104,
+    "miss_in_rate": 0.18,
+    "miss_out_rate": 0.05,
+    "spurious_in_rate": 0.02,
+    "spurious_out_rate": 0.03,
+    "jitter_std_seconds": 6.0
+  },
+  "counts": {
+    "ground_truth_in": 8922,
+    "ground_truth_out": 8922,
+    "measured_in": 7492,
+    "measured_out": 8754,
+    "spurious_in": 178,
+    "spurious_out": 268
+  },
+  "naive_occupancy": {
+    "min": -1262,
+    "max": 23,
+    "negative_minutes": 984
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "scenario": "perfect_day_v1",
+  "timezone": "UTC",
+  "seed": 7,
+  "num_pax": 8922,
+  "start_ts_utc": "2026-01-15T06:00:00Z",
+  "end_ts_utc": "2026-01-15T22:57:00Z",
+  "wait_seconds": {
+    "mean": 2933.181,
+    "p50": 3383.227,
+    "p90": 4910.736,
+    "p95": 5109.1,
+    "max": 5287.895
+  }
+}

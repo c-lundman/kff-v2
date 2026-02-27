@@ -1,0 +1,20 @@
+{
+  "variant": "mixed_heavy_noise",
+  "config": {
+    "q0": 0.0,
+    "w_in": 1.0,
+    "w_out": 10.0,
+    "smooth_in": 0.05,
+    "smooth_out": 0.05
+  },
+  "naive_occupancy": {
+    "negative_minutes": 984,
+    "min": -1262.0
+  },
+  "reconciled_occupancy": {
+    "negative_minutes": 0,
+    "min": -5.250362900015323e-12,
+    "mae_vs_truth": 39.51943107854786,
+    "p95_abs_err_vs_truth": 107.74973724440405
+  }
+}

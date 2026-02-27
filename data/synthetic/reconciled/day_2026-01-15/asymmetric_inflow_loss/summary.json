@@ -1,0 +1,20 @@
+{
+  "variant": "asymmetric_inflow_loss",
+  "config": {
+    "q0": 0.0,
+    "w_in": 1.0,
+    "w_out": 10.0,
+    "smooth_in": 0.05,
+    "smooth_out": 0.05
+  },
+  "naive_occupancy": {
+    "negative_minutes": 1015,
+    "min": -2024.0
+  },
+  "reconciled_occupancy": {
+    "negative_minutes": 0,
+    "min": 5.028528815641896e-10,
+    "mae_vs_truth": 63.24276829958461,
+    "p95_abs_err_vs_truth": 155.7081594271638
+  }
+}

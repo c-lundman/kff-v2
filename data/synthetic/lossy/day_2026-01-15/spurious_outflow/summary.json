@@ -1,0 +1,24 @@
+{
+  "variant": "spurious_outflow",
+  "config": {
+    "seed": 103,
+    "miss_in_rate": 0.03,
+    "miss_out_rate": 0.0,
+    "spurious_in_rate": 0.0,
+    "spurious_out_rate": 0.05,
+    "jitter_std_seconds": 1.5
+  },
+  "counts": {
+    "ground_truth_in": 8922,
+    "ground_truth_out": 8922,
+    "measured_in": 8668,
+    "measured_out": 9368,
+    "spurious_in": 0,
+    "spurious_out": 446
+  },
+  "naive_occupancy": {
+    "min": -700,
+    "max": 396,
+    "negative_minutes": 327
+  }
+}

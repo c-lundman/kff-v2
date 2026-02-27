@@ -1,0 +1,20 @@
+{
+  "variant": "spurious_outflow",
+  "config": {
+    "q0": 0.0,
+    "w_in": 1.0,
+    "w_out": 10.0,
+    "smooth_in": 0.05,
+    "smooth_out": 0.05
+  },
+  "naive_occupancy": {
+    "negative_minutes": 327,
+    "min": -700.0
+  },
+  "reconciled_occupancy": {
+    "negative_minutes": 0,
+    "min": 5.162548778470143e-10,
+    "mae_vs_truth": 9.682718584649727,
+    "p95_abs_err_vs_truth": 19.735630404076595
+  }
+}
