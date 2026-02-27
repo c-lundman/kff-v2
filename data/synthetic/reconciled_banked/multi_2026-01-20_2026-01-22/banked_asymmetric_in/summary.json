@@ -2,12 +2,29 @@
   "variant": "banked_asymmetric_in",
   "num_episodes": 12,
   "minutes_in_episodes": 1626,
-  "naive_negative_minutes": 4235,
-  "reconciled_negative_minutes": 0,
-  "mae_vs_truth": 12.985213192182744,
+  "naive_occupancy": {
+    "negative_minutes": 4235,
+    "min": -1849.0,
+    "max": 106.0
+  },
+  "reconciled_occupancy": {
+    "negative_minutes": 0,
+    "min": 0.0,
+    "max": 930.4901635410317,
+    "mae_vs_truth": 12.985213192182744,
+    "p95_abs_err_vs_truth": 89.37340107205614
+  },
   "fifo_wait_minutes": {
+    "mean": 23.84643114635905,
     "p50": 13.0,
     "p90": 71.0,
-    "p95": 92.0
+    "p95": 92.0,
+    "max": 106.0
+  },
+  "correction_size": {
+    "in_abs_adjust_sum": 1687.9793502677899,
+    "out_abs_adjust_sum": 128.72552804511315,
+    "in_abs_adjust_mean": 0.39073596071013655,
+    "out_abs_adjust_mean": 0.029797575936368784
   }
 }

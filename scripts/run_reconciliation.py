@@ -8,7 +8,15 @@ from pathlib import Path
 
 import pandas as pd
 
-from kff_v2 import ReconcileConfig, add_fifo_wait_columns, reconcile_minute_flows
+from kff_v2 import (
+    ReconcileConfig,
+    add_fifo_wait_columns,
+    correction_size_metrics,
+    occupancy_error_metrics,
+    occupancy_physical_metrics,
+    reconcile_minute_flows,
+    wait_time_metrics,
+)
 
 
 def main() -> None:
@@ -45,6 +53,7 @@ def main() -> None:
         out_dir.mkdir(parents=True, exist_ok=True)
         merged.to_csv(out_dir / "reconciled_minute_flows.csv", index=False)
 
+        occ_err = occupancy_error_metrics(merged["occupancy_corrected_end"], merged["occupancy_truth_end"])
         summary = {
             "variant": variant_dir.name,
             "config": {
@@ -55,19 +64,23 @@ def main() -> None:
                 "smooth_out": config.smooth_out,
             },
             "naive_occupancy": {
-                "negative_minutes": int((measured["naive_occupancy_end"] < 0).sum()),
-                "min": float(measured["naive_occupancy_end"].min()),
+                **occupancy_physical_metrics(measured["naive_occupancy_end"]),
             },
             "reconciled_occupancy": {
-                "negative_minutes": int((merged["occupancy_corrected_end"] < -1e-6).sum()),
-                "min": float(merged["occupancy_corrected_end"].min()),
-                "mae_vs_truth": float(merged["occupancy_abs_err"].mean()),
-                "p95_abs_err_vs_truth": float(merged["occupancy_abs_err"].quantile(0.95)),
+                **occupancy_physical_metrics(merged["occupancy_corrected_end"]),
+                "mae_vs_truth": occ_err["mae"],
+                "p95_abs_err_vs_truth": occ_err["p95_abs_err"],
             },
             "fifo_wait_minutes": {
-                "p50": float(merged["Väntetid"].dropna().quantile(0.50)),
-                "p90": float(merged["Väntetid"].dropna().quantile(0.90)),
-                "p95": float(merged["Väntetid"].dropna().quantile(0.95)),
+                **wait_time_metrics(merged["Väntetid"]),
+            },
+            "correction_size": {
+                **correction_size_metrics(
+                    merged["in_count_measured"],
+                    merged["out_count_measured"],
+                    merged["in_count_corrected"],
+                    merged["out_count_corrected"],
+                )
             },
         }
         with (out_dir / "summary.json").open("w", encoding="utf-8") as f:

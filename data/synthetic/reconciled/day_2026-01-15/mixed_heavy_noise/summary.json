@@ -9,17 +9,27 @@
   },
   "naive_occupancy": {
     "negative_minutes": 984,
-    "min": -1262.0
+    "min": -1262.0,
+    "max": 23.0
   },
   "reconciled_occupancy": {
     "negative_minutes": 0,
     "min": 0.0,
+    "max": 863.9219424358248,
     "mae_vs_truth": 39.51943107854785,
     "p95_abs_err_vs_truth": 107.74973724440405
   },
   "fifo_wait_minutes": {
+    "mean": 44.25172074729597,
     "p50": 52.0,
     "p90": 74.0,
-    "p95": 77.0
+    "p95": 77.0,
+    "max": 80.0
+  },
+  "correction_size": {
+    "in_abs_adjust_sum": 1147.3691887939594,
+    "out_abs_adjust_sum": 114.72727272731814,
+    "in_abs_adjust_mean": 1.1281899594827527,
+    "out_abs_adjust_mean": 0.11280951103964419
   }
 }

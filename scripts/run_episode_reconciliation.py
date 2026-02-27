@@ -13,8 +13,12 @@ from kff_v2 import (
     EpisodeDetectConfig,
     ReconcileConfig,
     add_fifo_wait_columns,
+    correction_size_metrics,
     detect_queue_episodes,
+    occupancy_error_metrics,
+    occupancy_physical_metrics,
     reconcile_by_episodes,
+    wait_time_metrics,
 )
 
 
@@ -58,17 +62,29 @@ def run_one(day_key: str, variant: str) -> None:
     merged.to_csv(out_dir / "reconciled_minute_flows.csv", index=False)
     episodes.to_csv(out_dir / "episodes.csv", index=False)
 
+    occ_err = occupancy_error_metrics(merged["occupancy_corrected_end"], merged["occupancy_truth_end"])
     summary = {
         "variant": variant,
         "num_episodes": int(len(episodes)),
         "minutes_in_episodes": int(merged["in_episode"].sum()),
-        "naive_negative_minutes": int((merged["naive_occupancy_end"] < 0).sum()),
-        "reconciled_negative_minutes": int((merged["occupancy_corrected_end"] < -1e-6).sum()),
-        "mae_vs_truth": float(merged["occupancy_abs_err"].mean()),
+        "naive_occupancy": {
+            **occupancy_physical_metrics(merged["naive_occupancy_end"]),
+        },
+        "reconciled_occupancy": {
+            **occupancy_physical_metrics(merged["occupancy_corrected_end"]),
+            "mae_vs_truth": occ_err["mae"],
+            "p95_abs_err_vs_truth": occ_err["p95_abs_err"],
+        },
         "fifo_wait_minutes": {
-            "p50": float(merged["Väntetid"].dropna().quantile(0.50)),
-            "p90": float(merged["Väntetid"].dropna().quantile(0.90)),
-            "p95": float(merged["Väntetid"].dropna().quantile(0.95)),
+            **wait_time_metrics(merged["Väntetid"]),
+        },
+        "correction_size": {
+            **correction_size_metrics(
+                merged["in_count_measured"],
+                merged["out_count_measured"],
+                merged["in_count_corrected"],
+                merged["out_count_corrected"],
+            )
         },
     }
     with (out_dir / "summary.json").open("w", encoding="utf-8") as f:

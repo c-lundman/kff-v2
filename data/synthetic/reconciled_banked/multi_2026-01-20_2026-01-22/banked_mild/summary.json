@@ -2,12 +2,29 @@
   "variant": "banked_mild",
   "num_episodes": 16,
   "minutes_in_episodes": 1770,
-  "naive_negative_minutes": 3327,
-  "reconciled_negative_minutes": 0,
-  "mae_vs_truth": 2.974891716259702,
+  "naive_occupancy": {
+    "negative_minutes": 3327,
+    "min": -366.0,
+    "max": 891.0
+  },
+  "reconciled_occupancy": {
+    "negative_minutes": 0,
+    "min": 0.0,
+    "max": 1082.2867761289583,
+    "mae_vs_truth": 2.974891716259702,
+    "p95_abs_err_vs_truth": 18.811690757441546
+  },
   "fifo_wait_minutes": {
+    "mean": 27.005457025920872,
     "p50": 13.0,
     "p90": 83.5,
-    "p95": 122.0
+    "p95": 122.0,
+    "max": 140.0
+  },
+  "correction_size": {
+    "in_abs_adjust_sum": 350.86797182873045,
+    "out_abs_adjust_sum": 26.686492922168913,
+    "in_abs_adjust_mean": 0.08121943792331723,
+    "out_abs_adjust_mean": 0.00617742891716873
   }
 }
