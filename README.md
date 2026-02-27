@@ -159,6 +159,11 @@ Multi-day banked traffic dataset and episode-based reconciliation:
 - generate: `.venv/bin/python scripts/generate_banked_multiday_dataset.py`
 - reconcile by episodes: `.venv/bin/python scripts/run_episode_reconciliation.py`
 
+Banked synthetic data now also includes event-level files for easier manual loading:
+
+- perfect: `data/synthetic/perfect_banked/<key>/events.csv`
+- lossy variants: `data/synthetic/lossy_banked/<key>/<variant>/measured_events.csv`
+
 Current outputs:
 
 - `data/synthetic/reconciled/day_2026-01-15/<variant>/reconciled_minute_flows.csv`,

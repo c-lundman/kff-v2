@@ -16,6 +16,15 @@ def _minute_range(start: datetime, end: datetime) -> pd.DatetimeIndex:
     return pd.date_range(start=start, end=end, freq="1min", tz="UTC")
 
 
+def _iso_z(ts: datetime) -> str:
+    t = pd.Timestamp(ts)
+    if t.tzinfo is None:
+        t = t.tz_localize("UTC")
+    else:
+        t = t.tz_convert("UTC")
+    return t.isoformat().replace("+00:00", "Z")
+
+
 def _daily_capacity(minute_ts: pd.Timestamp, rng: random.Random) -> float:
     h = minute_ts.hour + minute_ts.minute / 60.0
     if 5.5 <= h <= 10.0:
@@ -143,12 +152,95 @@ def make_lossy_variants(perfect: pd.DataFrame) -> dict[str, pd.DataFrame]:
     return out
 
 
+def minute_flows_to_directional_events(
+    df: pd.DataFrame,
+    *,
+    in_col: str,
+    out_col: str,
+    seed: int,
+) -> tuple[list[datetime], list[datetime]]:
+    """Expand minute counts to deterministic per-event timestamps."""
+    rng = random.Random(seed)
+    in_times: list[datetime] = []
+    out_times: list[datetime] = []
+    for row in df.itertuples(index=False):
+        minute_ts = pd.Timestamp(row.minute_start_utc).to_pydatetime()
+        for _ in range(int(getattr(row, in_col))):
+            in_times.append(minute_ts + timedelta(seconds=rng.random() * 60.0))
+        for _ in range(int(getattr(row, out_col))):
+            out_times.append(minute_ts + timedelta(seconds=rng.random() * 60.0))
+    in_times.sort()
+    out_times.sort()
+    return in_times, out_times
+
+
+def write_perfect_events(
+    perfect: pd.DataFrame,
+    out_path: Path,
+) -> None:
+    in_times, out_times = minute_flows_to_directional_events(
+        perfect, in_col="in_count", out_col="out_count", seed=3001
+    )
+    n = min(len(in_times), len(out_times))
+    rows = []
+    for i in range(n):
+        wait_seconds = (out_times[i] - in_times[i]).total_seconds()
+        rows.append(
+            {
+                "pax_id": i + 1,
+                "in_ts_utc": _iso_z(in_times[i]),
+                "out_ts_utc": _iso_z(out_times[i]),
+                "wait_seconds": round(wait_seconds, 3),
+            }
+        )
+    pd.DataFrame(rows).to_csv(out_path, index=False)
+
+
+def write_measured_events(
+    variant_df: pd.DataFrame,
+    out_path: Path,
+    *,
+    seed: int,
+) -> None:
+    in_times, out_times = minute_flows_to_directional_events(
+        variant_df, in_col="in_count", out_col="out_count", seed=seed
+    )
+    rows = []
+    event_id = 0
+    for ts in in_times:
+        event_id += 1
+        rows.append(
+            {
+                "event_id": event_id,
+                "direction": "in",
+                "ts_utc": _iso_z(ts),
+                "source_pax_id": "",
+                "corruption": "aggregate_generated",
+            }
+        )
+    for ts in out_times:
+        event_id += 1
+        rows.append(
+            {
+                "event_id": event_id,
+                "direction": "out",
+                "ts_utc": _iso_z(ts),
+                "source_pax_id": "",
+                "corruption": "aggregate_generated",
+            }
+        )
+    events = pd.DataFrame(rows).sort_values("ts_utc").reset_index(drop=True)
+    events["event_id"] = range(1, len(events) + 1)
+    events.to_csv(out_path, index=False)
+
+
 def main() -> None:
     perfect, summary = generate_dataset()
 
     root = Path("data/synthetic/perfect_banked/multi_2026-01-20_2026-01-22")
     root.mkdir(parents=True, exist_ok=True)
     perfect.to_csv(root / "minute_flows.csv", index=False)
+    write_perfect_events(perfect, root / "events.csv")
     with (root / "summary.json").open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
         f.write("\n")
@@ -159,6 +251,7 @@ def main() -> None:
         out_dir = lossy_root / name
         out_dir.mkdir(parents=True, exist_ok=True)
         df.to_csv(out_dir / "minute_flows.csv", index=False)
+        write_measured_events(df, out_dir / "measured_events.csv", seed=4000 + len(name))
         s = {
             "variant": name,
             "naive_occupancy_min": float(df["naive_occupancy_end"].min()),
@@ -174,4 +267,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
