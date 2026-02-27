@@ -151,10 +151,19 @@ def reconcile_by_episodes(
     )
 
     episodes = detect_queue_episodes(work, config=episode_config)
+    cfg = reconcile_config or ReconcileConfig()
     if episodes.empty:
+        # Fallback: if no episodes are detected, reconcile the full window so
+        # occupancy still reflects the corrected in/out flows.
+        rec = reconcile_minute_flows(
+            work.loc[:, ["minute_start_utc", "in_count", "out_count"]].reset_index(drop=True),
+            config=cfg,
+        )
+        out.loc[:, "in_count_corrected"] = rec["in_count_corrected"].to_numpy()
+        out.loc[:, "out_count_corrected"] = rec["out_count_corrected"].to_numpy()
+        out.loc[:, "occupancy_corrected_end"] = rec["occupancy_corrected_end"].to_numpy()
         return out
 
-    cfg = reconcile_config or ReconcileConfig()
     for row in episodes.itertuples(index=False):
         s = int(row.start_idx)
         e = int(row.end_idx)
@@ -166,5 +175,10 @@ def reconcile_by_episodes(
         out.loc[s:e, "episode_id"] = int(row.episode_id)
         out.loc[s:e, "in_episode"] = True
 
-    return out
+    # Outside detected episodes, treat corrected flows as zeroed inactive periods.
+    inactive = ~out["in_episode"]
+    out.loc[inactive, "in_count_corrected"] = 0.0
+    out.loc[inactive, "out_count_corrected"] = 0.0
+    out.loc[inactive, "occupancy_corrected_end"] = 0.0
 
+    return out

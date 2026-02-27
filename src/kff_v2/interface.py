@@ -24,8 +24,8 @@ class EstimateQueueOptions:
         q0=0.0,
         w_in=1.0,
         w_out=1.0,
-        smooth_in=0.05,
-        smooth_out=0.05,
+        smooth_in=0.0,
+        smooth_out=0.0,
     )
     episodes: EpisodeDetectConfig = EpisodeDetectConfig()
     include_fifo_wait: bool = True
@@ -67,7 +67,8 @@ def _build_minute_flows(
 
 
 def _format_queue_output(reconciled: pd.DataFrame) -> pd.DataFrame:
-    queue = pd.DataFrame({"Tid": pd.to_datetime(reconciled["minute_start_utc"], utc=True)})
+    tid = pd.to_datetime(reconciled["minute_start_utc"], utc=True).dt.tz_localize(None)
+    queue = pd.DataFrame({"Tid": tid})
     queue["Pax i kö"] = reconciled["occupancy_corrected_end"].astype(float).to_numpy()
     queue["Pax ur kö"] = reconciled["out_count_corrected"].astype(float).to_numpy()
     queue["Pax in i kö"] = reconciled["in_count_corrected"].astype(float).to_numpy()
@@ -102,7 +103,7 @@ def estimate_queue_from_timestamps(
 
     if measured.empty:
         queue = pd.DataFrame(columns=["Pax i kö", "Pax ur kö", "Pax in i kö", "Väntetid"])
-        queue.index = pd.DatetimeIndex([], tz="UTC", name="Tid")
+        queue.index = pd.DatetimeIndex([], name="Tid")
         if return_debug:
             return queue, measured
         return queue
@@ -124,7 +125,7 @@ def estimate_queue_from_timestamps(
     )
     if return_debug:
         debug = reconciled.copy()
-        debug["Tid"] = pd.to_datetime(debug["minute_start_utc"], utc=True)
+        debug["Tid"] = pd.to_datetime(debug["minute_start_utc"], utc=True).dt.tz_localize(None)
         debug = debug.set_index("Tid")
         return queue, debug
     return queue
