@@ -17,6 +17,10 @@ class ReconcileConfig:
     q0: float = 0.0
     w_in: float = 1.0
     w_out: float = 4.0
+    relative_inflow_error: bool = False
+    relative_inflow_eps: float = 1.0
+    relative_inflow_weight_min_scale: float = 0.25
+    relative_inflow_weight_max_scale: float = 16.0
     adaptive_inflow_prior: bool = False
     activity_source: str = "max_io"
     activity_window: int = 7
@@ -38,8 +42,20 @@ def _compute_inflow_weight_vector(
     cfg: ReconcileConfig,
 ) -> np.ndarray:
     """Compute time-varying inflow correction weights for prior shaping."""
+    w = np.full_like(in_measured, float(cfg.w_in), dtype=float)
+
+    if cfg.relative_inflow_error:
+        eps = max(float(cfg.relative_inflow_eps), 1e-9)
+        rel_scale = 1.0 / np.square(in_measured + eps)
+        rel_scale = np.clip(
+            rel_scale,
+            float(cfg.relative_inflow_weight_min_scale),
+            float(cfg.relative_inflow_weight_max_scale),
+        )
+        w = w * rel_scale
+
     if not cfg.adaptive_inflow_prior:
-        return np.full_like(in_measured, float(cfg.w_in), dtype=float)
+        return w
 
     if cfg.activity_source == "in":
         proxy = in_measured.copy()
@@ -67,7 +83,7 @@ def _compute_inflow_weight_vector(
         float(cfg.inflow_weight_min_scale),
         float(cfg.inflow_weight_max_scale),
     )
-    return float(cfg.w_in) * scale
+    return w * scale
 
 
 def reconcile_minute_flows(

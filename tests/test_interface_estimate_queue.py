@@ -76,9 +76,9 @@ def test_estimate_queue_small_case_has_consistent_occupancy() -> None:
         }
     )
     queue = estimate_queue_from_timestamps(in_df, out_df)
-    assert queue["Pax in i kö"].tolist() == [3.0, 0.0, 0.0, 0.0]
-    assert queue["Pax ur kö"].tolist() == [0.0, 0.0, 0.0, 3.0]
-    assert queue["Pax i kö"].tolist() == [3.0, 3.0, 3.0, 0.0]
+    assert abs(queue["Pax in i kö"].to_numpy() - [3.0, 0.0, 0.0, 0.0]).max() < 1e-9
+    assert abs(queue["Pax ur kö"].to_numpy() - [0.0, 0.0, 0.0, 3.0]).max() < 1e-9
+    assert abs(queue["Pax i kö"].to_numpy() - [3.0, 3.0, 3.0, 0.0]).max() < 1e-9
     waits = queue["Väntetid"].tolist()
     assert pd.isna(waits[0]) and pd.isna(waits[1]) and pd.isna(waits[2])
     assert waits[3] == 3.0
