@@ -25,7 +25,7 @@ class EstimateQueueOptions:
         w_in=1.0,
         w_out=1.0,
         relative_inflow_error=True,
-        relative_inflow_eps=1.0,
+        relative_inflow_eps=0.01,
         relative_inflow_weight_min_scale=0.25,
         relative_inflow_weight_max_scale=16.0,
         adaptive_inflow_prior=True,

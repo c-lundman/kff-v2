@@ -1,0 +1,10 @@
+{
+  "scenario": "single_departure_flight",
+  "seed": 456,
+  "n_pax": 200,
+  "arrival_fwhm_min": 30.0,
+  "arrival_center_min": 60.0,
+  "service_pax_per_min": 5.0,
+  "start_ts_utc": "2026-02-02T08:00:00Z",
+  "end_ts_utc": "2026-02-02T09:32:00.790078Z"
+}
