@@ -21,16 +21,27 @@ class ReconcileConfig:
     relative_inflow_eps: float = 1.0
     relative_inflow_weight_min_scale: float = 0.25
     relative_inflow_weight_max_scale: float = 16.0
+    relative_outflow_error: bool = False
+    relative_outflow_eps: float = 1.0
+    relative_outflow_weight_min_scale: float = 0.25
+    relative_outflow_weight_max_scale: float = 16.0
     multiplicative_inflow_prior: bool = False
     multiplicative_inflow_strength: float = 2.0
     multiplicative_alpha_min: float = 0.0
     multiplicative_alpha_max: float = 10.0
+    multiplicative_outflow_prior: bool = False
+    multiplicative_outflow_strength: float = 2.0
+    multiplicative_beta_min: float = 0.0
+    multiplicative_beta_max: float = 10.0
     adaptive_inflow_prior: bool = False
+    adaptive_outflow_prior: bool = False
     activity_source: str = "max_io"
     activity_window: int = 7
     activity_eps: float = 0.5
     inflow_weight_min_scale: float = 0.25
     inflow_weight_max_scale: float = 4.0
+    outflow_weight_min_scale: float = 0.25
+    outflow_weight_max_scale: float = 4.0
     smooth_in: float = 0.0
     smooth_out: float = 0.0
     nonnegative_flows: bool = True
@@ -38,6 +49,20 @@ class ReconcileConfig:
     eps_abs: float = 1e-5
     eps_rel: float = 1e-5
     max_iter: int = 50_000
+
+
+def _compute_activity_proxy(
+    in_measured: np.ndarray,
+    out_measured: np.ndarray,
+    cfg: ReconcileConfig,
+) -> np.ndarray:
+    if cfg.activity_source == "in":
+        return in_measured.copy()
+    elif cfg.activity_source == "out":
+        return out_measured.copy()
+    elif cfg.activity_source == "sum_io":
+        return in_measured + out_measured
+    return np.maximum(in_measured, out_measured)
 
 
 def _compute_inflow_weight_vector(
@@ -61,15 +86,7 @@ def _compute_inflow_weight_vector(
     if not cfg.adaptive_inflow_prior:
         return w
 
-    if cfg.activity_source == "in":
-        proxy = in_measured.copy()
-    elif cfg.activity_source == "out":
-        proxy = out_measured.copy()
-    elif cfg.activity_source == "sum_io":
-        proxy = in_measured + out_measured
-    else:
-        proxy = np.maximum(in_measured, out_measured)
-
+    proxy = _compute_activity_proxy(in_measured, out_measured, cfg)
     win = max(1, int(cfg.activity_window))
     proxy_s = (
         pd.Series(proxy, dtype=float)
@@ -86,6 +103,48 @@ def _compute_inflow_weight_vector(
         scale,
         float(cfg.inflow_weight_min_scale),
         float(cfg.inflow_weight_max_scale),
+    )
+    return w * scale
+
+
+def _compute_outflow_weight_vector(
+    in_measured: np.ndarray,
+    out_measured: np.ndarray,
+    cfg: ReconcileConfig,
+) -> np.ndarray:
+    """Compute time-varying outflow correction weights for prior shaping."""
+    w = np.full_like(out_measured, float(cfg.w_out), dtype=float)
+
+    if cfg.relative_outflow_error:
+        eps = max(float(cfg.relative_outflow_eps), 1e-9)
+        rel_scale = 1.0 / np.square(out_measured + eps)
+        rel_scale = np.clip(
+            rel_scale,
+            float(cfg.relative_outflow_weight_min_scale),
+            float(cfg.relative_outflow_weight_max_scale),
+        )
+        w = w * rel_scale
+
+    if not cfg.adaptive_outflow_prior:
+        return w
+
+    proxy = _compute_activity_proxy(in_measured, out_measured, cfg)
+    win = max(1, int(cfg.activity_window))
+    proxy_s = (
+        pd.Series(proxy, dtype=float)
+        .rolling(window=win, center=True, min_periods=1)
+        .mean()
+        .to_numpy()
+    )
+    raw_scale = 1.0 / (proxy_s + float(cfg.activity_eps))
+    mean_scale = float(raw_scale.mean()) if len(raw_scale) else 1.0
+    if mean_scale <= 0:
+        mean_scale = 1.0
+    scale = raw_scale / mean_scale
+    scale = np.clip(
+        scale,
+        float(cfg.outflow_weight_min_scale),
+        float(cfg.outflow_weight_max_scale),
     )
     return w * scale
 
@@ -139,8 +198,9 @@ def reconcile_minute_flows(
     o = cp.Variable(n)
     q = cp.Variable(n)
     alpha = cp.Variable() if cfg.multiplicative_inflow_prior else None
+    beta = cp.Variable() if cfg.multiplicative_outflow_prior else None
     w_in_vec = _compute_inflow_weight_vector(in_measured, out_measured, cfg)
-    w_out_vec = np.full(n, float(cfg.w_out), dtype=float)
+    w_out_vec = _compute_outflow_weight_vector(in_measured, out_measured, cfg)
 
     objective_terms = [
         cp.sum(cp.multiply(w_in_vec, cp.square(i - in_measured))),
@@ -155,6 +215,11 @@ def reconcile_minute_flows(
             float(cfg.multiplicative_inflow_strength)
             * cp.sum_squares(i - alpha * in_measured)
         )
+    if cfg.multiplicative_outflow_prior:
+        objective_terms.append(
+            float(cfg.multiplicative_outflow_strength)
+            * cp.sum_squares(o - beta * out_measured)
+        )
 
     constraints = [
         q[0] == cfg.q0 + i[0] - o[0],
@@ -168,6 +233,10 @@ def reconcile_minute_flows(
         constraints.append(alpha >= float(cfg.multiplicative_alpha_min))
         if cfg.multiplicative_alpha_max > cfg.multiplicative_alpha_min:
             constraints.append(alpha <= float(cfg.multiplicative_alpha_max))
+    if cfg.multiplicative_outflow_prior:
+        constraints.append(beta >= float(cfg.multiplicative_beta_min))
+        if cfg.multiplicative_beta_max > cfg.multiplicative_beta_min:
+            constraints.append(beta <= float(cfg.multiplicative_beta_max))
 
     problem = cp.Problem(cp.Minimize(sum(objective_terms)), constraints)
     solve_kwargs = {
@@ -206,4 +275,6 @@ def reconcile_minute_flows(
     )
     if cfg.multiplicative_inflow_prior and alpha is not None and alpha.value is not None:
         out["inflow_alpha"] = float(alpha.value)
+    if cfg.multiplicative_outflow_prior and beta is not None and beta.value is not None:
+        out["outflow_beta"] = float(beta.value)
     return out

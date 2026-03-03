@@ -7,7 +7,13 @@ from typing import Literal
 
 from kff_v2.reconcile import ReconcileConfig
 
-ReconcilePreset = Literal["default", "trust_outflow", "balanced", "aggressive_peak_fill"]
+ReconcilePreset = Literal[
+    "default",
+    "trust_outflow",
+    "trust_inflow",
+    "balanced",
+    "aggressive_peak_fill",
+]
 
 
 def make_reconcile_config(
@@ -56,6 +62,28 @@ def make_reconcile_config(
             activity_eps=0.5,
             inflow_weight_min_scale=0.25,
             inflow_weight_max_scale=4.0,
+            smooth_in=0.0,
+            smooth_out=0.0,
+        )
+    elif preset == "trust_inflow":
+        cfg = ReconcileConfig(
+            q0=0.0,
+            w_in=100.0,
+            w_out=1.0,
+            relative_outflow_error=True,
+            relative_outflow_eps=0.01,
+            relative_outflow_weight_min_scale=0.25,
+            relative_outflow_weight_max_scale=16.0,
+            multiplicative_outflow_prior=True,
+            multiplicative_outflow_strength=2.0,
+            multiplicative_beta_min=0.2,
+            multiplicative_beta_max=4.0,
+            adaptive_outflow_prior=True,
+            activity_source="in",
+            activity_window=7,
+            activity_eps=0.5,
+            outflow_weight_min_scale=0.25,
+            outflow_weight_max_scale=4.0,
             smooth_in=0.0,
             smooth_out=0.0,
         )

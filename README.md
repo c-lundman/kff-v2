@@ -238,6 +238,7 @@ Available presets:
 
 - `default`: recommended baseline for mixed quality flows.
 - `trust_outflow`: strong trust in outflow (e.g. PPC out + lossy inflow).
+- `trust_inflow`: strong trust in inflow (mirror case: reliable inflow, noisier outflow).
 - `balanced`: minimal priors, symmetric trust.
 - `aggressive_peak_fill`: stronger inflow peak reconstruction.
 
