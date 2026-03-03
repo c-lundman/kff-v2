@@ -50,8 +50,24 @@ def generate_scenario(
             f"{base_meta_path}. Generate multiple_bunched_arrivals first."
         )
     base = json.loads(base_meta_path.read_text(encoding="utf-8"))
-    centers = [float(x) for x in base["flight_centers_min"]]
+    base_centers = [float(x) for x in base["flight_centers_min"]]
     pax_per_flight = [int(x) for x in base["pax_per_flight"]]
+
+    # Keep the same clustered tendency but enforce clearer separation between
+    # departures so multiple peaks are visible in queue inflow.
+    min_sep_min = 10.0
+    centers = sorted(base_centers)
+    for i in range(1, len(centers)):
+        if centers[i] < centers[i - 1] + min_sep_min:
+            centers[i] = centers[i - 1] + min_sep_min
+    # Recentre to preserve roughly same central timing and keep within horizon.
+    orig_mean = sum(base_centers) / len(base_centers)
+    new_mean = sum(centers) / len(centers)
+    shift = orig_mean - new_mean
+    centers = [c + shift for c in centers]
+    low, high = 20.0, 145.0
+    centers = [min(max(c, low), high) for c in centers]
+    centers.sort()
 
     in_times: list[datetime] = []
     for c, p in zip(centers, pax_per_flight):
@@ -109,4 +125,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
