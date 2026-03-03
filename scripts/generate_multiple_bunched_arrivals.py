@@ -59,11 +59,28 @@ def generate_scenario(
     n_flights = len(pax_per_flight)
 
     # Gaussian-like bunching centered near 70 minutes.
-    # Std 9 min puts several flights in a ~20 min high-density window.
-    centers = np.array([rng.gauss(70.0, 9.0) for _ in range(n_flights)])
-    centers = np.clip(centers, 35.0, 105.0)
-    centers.sort()
-    widths = [rng.randint(10, 16) for _ in range(n_flights)]
+    # Use minimum separation so all 8 flights remain visible as distinct arrivals,
+    # while still strongly clustering around the center.
+    mean_min = 70.0
+    std_min = 14.0
+    low_min, high_min = 20.0, 125.0
+    min_sep_min = 4.0
+    centers: list[float] = []
+    attempts = 0
+    while len(centers) < n_flights and attempts < 50_000:
+        attempts += 1
+        c = rng.gauss(mean_min, std_min)
+        if c < low_min or c > high_min:
+            continue
+        if any(abs(c - x) < min_sep_min for x in centers):
+            continue
+        centers.append(c)
+    if len(centers) < n_flights:
+        # Deterministic fallback preserving bunching.
+        centers = [46.0, 56.0, 64.0, 69.0, 73.0, 78.0, 86.0, 99.0][:n_flights]
+    centers = np.array(sorted(centers))
+    # Slightly narrower unloading windows to preserve per-flight structure.
+    widths = [rng.randint(6, 10) for _ in range(n_flights)]
 
     in_flux = np.zeros(horizon_min, dtype=int)
     for c, p, w in zip(centers, pax_per_flight, widths):
@@ -129,4 +146,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
