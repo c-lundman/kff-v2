@@ -195,7 +195,7 @@ Current outputs:
 
 Primary API for timestamp inputs:
 
-- `estimate_queue_from_timestamps(in_df, out_df, options=None, return_debug=False)`
+- `estimate_queue_from_timestamps(in_df, out_df, options=None, trust=..., w_in=..., w_out=..., multiplicative_strength=..., use_episode_splitting=..., include_fifo_wait=..., return_debug=False)`
 - default output index: `Tid`
 - default output columns:
 - `Pax i kö`,
@@ -209,7 +209,7 @@ Primary API for timestamp inputs:
 - computed after queue correction,
 - `NaN` for minutes where corrected outflow is zero.
 
-Example:
+Minimal interface example:
 
 ```python
 import pandas as pd
@@ -218,11 +218,18 @@ from kff_v2 import estimate_queue_from_timestamps
 in_df = pd.DataFrame({"timestamp": ["2026-01-20T06:00:05Z", "2026-01-20T06:00:31Z"]})
 out_df = pd.DataFrame({"timestamp": ["2026-01-20T06:01:10Z"]})
 
-queue_df = estimate_queue_from_timestamps(in_df, out_df)
+queue_df = estimate_queue_from_timestamps(
+    in_df,
+    out_df,
+    trust="outflow",
+    w_in=1.0,
+    w_out=100.0,
+    multiplicative_strength=2.0,
+)
 print(queue_df.head())
 ```
 
-Preset-based configuration example:
+Advanced configuration example (`options`):
 
 ```python
 import pandas as pd
@@ -233,6 +240,8 @@ opts = EstimateQueueOptions(
 )
 queue_df = estimate_queue_from_timestamps(in_df, out_df, options=opts)
 ```
+
+Note: use either compact arguments or `options`, not both in the same call.
 
 Available presets:
 

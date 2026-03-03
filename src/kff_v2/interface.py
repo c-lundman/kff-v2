@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, replace
+from typing import Literal, Optional
 
 import pandas as pd
 
@@ -11,6 +11,8 @@ from kff_v2.episodes import EpisodeDetectConfig, detect_queue_episodes, reconcil
 from kff_v2.fifo import add_fifo_wait_columns
 from kff_v2.presets import make_reconcile_config
 from kff_v2.reconcile import ReconcileConfig, reconcile_minute_flows
+
+TrustMode = Literal["default", "outflow", "inflow", "balanced"]
 
 
 @dataclass(frozen=True)
@@ -113,9 +115,24 @@ def estimate_queue_from_timestamps(
     out_df: pd.DataFrame,
     options: Optional[EstimateQueueOptions] = None,
     *,
+    trust: TrustMode | None = None,
+    w_in: float | None = None,
+    w_out: float | None = None,
+    multiplicative_strength: float | None = None,
+    use_episode_splitting: bool | None = None,
+    include_fifo_wait: bool | None = None,
     return_debug: bool = False,
 ):
     """Estimate corrected minute queue series from in/out timestamp DataFrames.
+
+    Minimal interface (recommended):
+    - `trust`: one of `default`, `outflow`, `inflow`, `balanced`
+    - optional overrides: `w_in`, `w_out`, `multiplicative_strength`,
+      `use_episode_splitting`, `include_fifo_wait`
+
+    Advanced interface:
+    - pass `options=EstimateQueueOptions(...)`
+    - when `options` is used, compact arguments above must be left as `None`.
 
     Returns
     -------
@@ -127,7 +144,52 @@ def estimate_queue_from_timestamps(
         Returns `(queue_df, debug_df)`, where `debug_df` contains measured and
         corrected minute series, including episode flags when enabled.
     """
-    opts = options or EstimateQueueOptions()
+    compact_args = (
+        trust is not None
+        or w_in is not None
+        or w_out is not None
+        or multiplicative_strength is not None
+        or use_episode_splitting is not None
+        or include_fifo_wait is not None
+    )
+    if options is not None and compact_args:
+        raise ValueError("Use either `options` or compact arguments, not both.")
+
+    if options is not None:
+        opts = options
+    else:
+        preset = {
+            None: "default",
+            "default": "default",
+            "outflow": "trust_outflow",
+            "inflow": "trust_inflow",
+            "balanced": "balanced",
+        }[trust]
+        rec = make_reconcile_config(preset)
+        if w_in is not None:
+            rec = replace(rec, w_in=float(w_in))
+        if w_out is not None:
+            rec = replace(rec, w_out=float(w_out))
+        if multiplicative_strength is not None:
+            rec = replace(
+                rec,
+                multiplicative_inflow_strength=float(multiplicative_strength),
+                multiplicative_outflow_strength=float(multiplicative_strength),
+            )
+        opts = EstimateQueueOptions(
+            reconcile=rec,
+            use_episode_splitting=(
+                bool(use_episode_splitting)
+                if use_episode_splitting is not None
+                else EstimateQueueOptions.use_episode_splitting
+            ),
+            include_fifo_wait=(
+                bool(include_fifo_wait)
+                if include_fifo_wait is not None
+                else EstimateQueueOptions.include_fifo_wait
+            ),
+        )
+
     measured = _build_minute_flows(in_df, out_df, opts)
 
     if measured.empty:
