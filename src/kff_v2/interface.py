@@ -7,7 +7,7 @@ from typing import Optional
 
 import pandas as pd
 
-from kff_v2.episodes import EpisodeDetectConfig, reconcile_by_episodes
+from kff_v2.episodes import EpisodeDetectConfig, detect_queue_episodes, reconcile_by_episodes
 from kff_v2.fifo import add_fifo_wait_columns
 from kff_v2.reconcile import ReconcileConfig, reconcile_minute_flows
 
@@ -97,6 +97,36 @@ def _format_queue_output(reconciled: pd.DataFrame) -> pd.DataFrame:
     return queue
 
 
+def _attach_episode_debug_columns(
+    debug: pd.DataFrame,
+    episodes_df: pd.DataFrame,
+) -> pd.DataFrame:
+    out = debug.copy()
+    out["episode_start"] = False
+    out["episode_end"] = False
+    out["episode_start_tid"] = pd.NaT
+    out["episode_end_tid"] = pd.NaT
+    out["episode_duration_minutes"] = float("nan")
+
+    if episodes_df.empty:
+        return out
+
+    episode_meta = episodes_df.loc[
+        :,
+        ["episode_id", "start_ts_utc", "end_ts_utc", "duration_minutes"],
+    ].copy()
+    episode_meta["start_ts_utc"] = pd.to_datetime(episode_meta["start_ts_utc"], utc=True).dt.tz_localize(None)
+    episode_meta["end_ts_utc"] = pd.to_datetime(episode_meta["end_ts_utc"], utc=True).dt.tz_localize(None)
+    episode_meta = episode_meta.set_index("episode_id")
+
+    out["episode_start_tid"] = out["episode_id"].map(episode_meta["start_ts_utc"])
+    out["episode_end_tid"] = out["episode_id"].map(episode_meta["end_ts_utc"])
+    out["episode_duration_minutes"] = out["episode_id"].map(episode_meta["duration_minutes"]).astype(float)
+    out["episode_start"] = out["Tid"] == out["episode_start_tid"]
+    out["episode_end"] = out["Tid"] == out["episode_end_tid"]
+    return out
+
+
 def estimate_queue_from_timestamps(
     in_df: pd.DataFrame,
     out_df: pd.DataFrame,
@@ -126,7 +156,9 @@ def estimate_queue_from_timestamps(
             return queue, measured
         return queue
 
+    episodes_df = pd.DataFrame()
     if opts.use_episode_splitting:
+        episodes_df = detect_queue_episodes(measured, opts.episodes)
         reconciled = reconcile_by_episodes(
             measured,
             reconcile_config=opts.reconcile,
@@ -144,6 +176,7 @@ def estimate_queue_from_timestamps(
     if return_debug:
         debug = reconciled.copy()
         debug["Tid"] = pd.to_datetime(debug["minute_start_utc"], utc=True).dt.tz_localize(None)
+        debug = _attach_episode_debug_columns(debug, episodes_df)
         debug = debug.set_index("Tid")
         return queue, debug
     return queue

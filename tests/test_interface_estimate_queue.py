@@ -1,6 +1,6 @@
 import pandas as pd
 
-from kff_v2 import EstimateQueueOptions, estimate_queue_from_timestamps
+from kff_v2 import EpisodeDetectConfig, EstimateQueueOptions, estimate_queue_from_timestamps
 
 
 def test_estimate_queue_output_schema() -> None:
@@ -37,7 +37,49 @@ def test_estimate_queue_debug_mode_returns_tuple() -> None:
     assert "in_count_measured" in debug.columns
     assert "out_count_measured" in debug.columns
     assert "in_episode" in debug.columns
+    assert "episode_start" in debug.columns
+    assert "episode_end" in debug.columns
+    assert "episode_start_tid" in debug.columns
+    assert "episode_end_tid" in debug.columns
+    assert "episode_duration_minutes" in debug.columns
     assert "Väntetid" in debug.columns
+
+
+def test_estimate_queue_debug_mode_has_episode_boundaries() -> None:
+    in_df = pd.DataFrame(
+        {
+            "timestamp": [
+                "2026-01-20T06:00:05Z",
+                "2026-01-20T06:01:05Z",
+                "2026-01-20T06:02:05Z",
+            ]
+        }
+    )
+    out_df = pd.DataFrame(
+        {
+            "timestamp": [
+                "2026-01-20T06:03:05Z",
+                "2026-01-20T06:04:05Z",
+                "2026-01-20T06:05:05Z",
+            ]
+        }
+    )
+    opts = EstimateQueueOptions(
+        episodes=EpisodeDetectConfig(
+            active_threshold=1.0,
+            min_active_minutes=1,
+            max_gap_minutes=0,
+            min_episode_minutes=1,
+            buffer_minutes=0,
+        )
+    )
+
+    _, debug = estimate_queue_from_timestamps(in_df, out_df, options=opts, return_debug=True)
+
+    assert bool(debug["episode_start"].any())
+    assert bool(debug["episode_end"].any())
+    assert debug.loc[debug["episode_start"], "episode_start_tid"].notna().all()
+    assert debug.loc[debug["episode_end"], "episode_end_tid"].notna().all()
 
 
 def test_estimate_queue_can_include_fifo_wait_column() -> None:
