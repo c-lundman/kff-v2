@@ -1,0 +1,27 @@
+{
+  "scenario": "multiple_bunched_departures",
+  "seed": 2030,
+  "service_pax_per_min": 8.0,
+  "flight_centers_min": [
+    38.65,
+    54.18,
+    59.35,
+    66.99,
+    75.08,
+    90.52,
+    97.24,
+    101.4
+  ],
+  "pax_per_flight": [
+    104,
+    138,
+    174,
+    190,
+    244,
+    178,
+    119,
+    116
+  ],
+  "start_ts_utc": "2026-02-05T08:00:00Z",
+  "end_ts_utc": "2026-02-05T10:37:52.500000Z"
+}

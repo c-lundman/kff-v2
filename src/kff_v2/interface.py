@@ -55,8 +55,12 @@ def _build_minute_flows(
     if options.out_timestamp_col not in out_df.columns:
         raise ValueError(f"out_df missing timestamp column: {options.out_timestamp_col}")
 
-    in_ts = pd.to_datetime(in_df[options.in_timestamp_col], utc=True, errors="coerce").dropna()
-    out_ts = pd.to_datetime(out_df[options.out_timestamp_col], utc=True, errors="coerce").dropna()
+    in_ts = pd.to_datetime(
+        in_df[options.in_timestamp_col], utc=True, errors="coerce", format="mixed"
+    ).dropna()
+    out_ts = pd.to_datetime(
+        out_df[options.out_timestamp_col], utc=True, errors="coerce", format="mixed"
+    ).dropna()
 
     if len(in_ts) == 0 and len(out_ts) == 0:
         return pd.DataFrame(columns=["minute_start_utc", "in_count", "out_count"])
