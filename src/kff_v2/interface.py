@@ -130,6 +130,8 @@ def estimate_queue_from_timestamps(
     - Parameters set to `None` use effective defaults:
       `w_in=1.0`, `w_out=1.0`, `multiplicative_strength=2.0`,
       `use_episode_splitting=True`, `include_fifo_wait=True`.
+    - `trust` is deprecated backward compatibility (`outflow`, `inflow`,
+      `balanced`, `default`) and maps to default weight pairs.
 
     Advanced interface:
     - pass `options=EstimateQueueOptions(...)`
