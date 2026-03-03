@@ -20,9 +20,9 @@ def _sample_passenger_arrivals_for_flight(
     t0: datetime,
     center_min: float,
     n_pax: int,
-    fwhm_min: float = 30.0,
-    low_clip_min: float = -70.0,
-    high_clip_min: float = 15.0,
+    fwhm_min: float = 12.0,
+    low_clip_min: float = -28.0,
+    high_clip_min: float = 6.0,
 ) -> list[datetime]:
     """Sample passenger arrivals around a flight center (departure-like spread)."""
     sigma = fwhm_min / 2.354820045
@@ -55,7 +55,7 @@ def generate_scenario(
 
     # Keep the same clustered tendency but enforce clearer separation between
     # departures so multiple peaks are visible in queue inflow.
-    min_sep_min = 10.0
+    min_sep_min = 12.0
     centers = sorted(base_centers)
     for i in range(1, len(centers)):
         if centers[i] < centers[i - 1] + min_sep_min:
@@ -71,7 +71,7 @@ def generate_scenario(
 
     in_times: list[datetime] = []
     for c, p in zip(centers, pax_per_flight):
-        in_times.extend(_sample_passenger_arrivals_for_flight(rng, t0, c, p, fwhm_min=30.0))
+        in_times.extend(_sample_passenger_arrivals_for_flight(rng, t0, c, p, fwhm_min=12.0))
     in_times.sort()
 
     service_sec = 60.0 / service_pax_per_min
